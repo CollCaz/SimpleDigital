@@ -50,12 +50,32 @@ void Point::CheckMouse() {
   }
 }
 
-bool Point::DragToConnect() {
-  if (this->rightClicking || this->Connected) {
-    DrawLineV(this->ConnectionLoc, GetMousePosition(), BLACK);
-    return true;
+void Point::DragToConnect() {
+  if (this->ConnectedToGate) {
+    this->connDragging = false;
+    DrawLineV(this->ConnectionLoc, this->pointingTo, BLACK);
+    return;
   }
-  return false;
+
+  if (this->rightClicking) {
+    this->connDragging = true;
+    DrawLineV(this->ConnectionLoc, GetMousePosition(), BLACK);
+    return;
+  }
+}
+
+bool Point::IsMouseOnThis() { return this->mouseOn; }
+bool Point::IsConnDragging() { return this->connDragging; }
+
+void Point::ConnectThis(Gate *g) {
+  this->ConnectedToGate = true;
+  this->ConnectedToGate = g;
+  this->pointingTo = g->ConnectionLoc;
+}
+void Point::ConnectThis(Output *o) {
+  this->ConnectedToGate = true;
+  this->ConnectedToOutput = o;
+  this->pointingTo = o->GetPosition();
 }
 
 void Point::Cycle() {
@@ -63,6 +83,46 @@ void Point::Cycle() {
   this->CheckMouse();
   this->DragMove();
   this->DragToConnect();
+}
+
+// Output
+Output::Output() {}
+void Output::Draw() {
+  DrawCircleV(this->position, this->radius, this->color);
+  DrawText(this->label.c_str(), (this->position.x - 13), (this->position.y - 4), 10,
+           BLACK);
+}
+
+void Output::ConnectToThis(Point *p) {
+  p->ConnectThis(this);
+}
+
+void Output::Cycle() { this->CheckMouse(); }
+
+void Output::CheckMouse() {
+  Vector2 mp = GetMousePosition();
+  if ((std::abs(mp.x - this->position.x)) <= this->radius &&
+      (std::abs(mp.y - this->position.y)) <= this->radius) {
+    this->mouseOn = true;
+  } else {
+    this->mouseOn = false;
+  }
+
+  // Holding
+  if (this->mouseOn && IsMouseButtonPressed(0)) {
+    this->held = true;
+  }
+  if (IsMouseButtonReleased(0)) {
+    this->held = false;
+  }
+
+  // Right Click Holding
+  if (this->mouseOn && IsMouseButtonPressed(1)) {
+    this->rightClicking = true;
+  }
+  if (IsMouseButtonReleased(1)) {
+    this->rightClicking = false;
+  }
 }
 
 // Gate
@@ -81,14 +141,32 @@ void Gate::Draw() {
 void Gate::ConnectToThis(Point *p) {
   if (!this->aIsConnected) {
     this->Connectiona = p;
-  } else {
+    this->aIsConnected = true;
+  } else if (!this->bIsConnected) {
     this->Connectionb = p;
+    this->bIsConnected = true;
+  } else {
+    return;
   }
+  p->ConnectThis(this);
+}
+
+bool Gate::HasEmptyConn() {
+  // NAND: only returns true if either or both are false
+  return (!this->aIsConnected || !this->bIsConnected);
 }
 
 void Gate::Cycle() {
+  this->ConnectionPointa = this->position;
+  this->ConnectionPointb = this->position;
   this->ConnectionLoc = this->position;
-  this->CheckMouse();
+  if (aIsConnected) {
+    this->Connectiona->SetPointingTo(this->ConnectionPointb);
+  }
+  if (bIsConnected) {
+    this->Connectionb->SetPointingTo(this->ConnectionPointa);
+  }
+  // this->CheckMouse();
   // this->DragMove();
   // this->DragToConnect();
 }
