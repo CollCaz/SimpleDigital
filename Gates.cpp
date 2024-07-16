@@ -1,4 +1,5 @@
 #include "Gates.hpp"
+#include <iostream>
 #include <raylib.h>
 
 // Object
@@ -16,12 +17,15 @@ bool Object::DragMove() {
   return false;
 }
 
+bool Object::IsMouseOnThis() { return this->mouseOn; }
+
 // Point
 
 Point::Point() {}
 
 void Point::Draw() {
   DrawText(this->lable.c_str(), this->position.x, this->position.y, 10, BLACK);
+  DrawLineV(this->ConnectionLoc, this->pointingTo, BLACK);
 }
 
 void Point::CheckMouse() {
@@ -51,30 +55,31 @@ void Point::CheckMouse() {
 }
 
 void Point::DragToConnect() {
-  if (this->ConnectedToGate) {
-    this->connDragging = false;
-    DrawLineV(this->ConnectionLoc, this->pointingTo, BLACK);
+  if (this->ConnectedToOutput || this->ConnectedToGate) {
     return;
   }
-
+  std::cout << "AAA" << std::endl;
   if (this->rightClicking) {
     this->connDragging = true;
-    DrawLineV(this->ConnectionLoc, GetMousePosition(), BLACK);
+    this->pointingTo = GetMousePosition();
     return;
+  } else {
+    this->connDragging = false;
+    this->pointingTo = this->position;
   }
 }
 
-bool Point::IsMouseOnThis() { return this->mouseOn; }
 bool Point::IsConnDragging() { return this->connDragging; }
 
 void Point::ConnectThis(Gate *g) {
   this->ConnectedToGate = true;
-  this->ConnectedToGate = g;
-  this->pointingTo = g->ConnectionLoc;
+  this->GateConnectedTo = g;
+  this->pointingTo = Vector2{0, 0};
 }
+
 void Point::ConnectThis(Output *o) {
-  this->ConnectedToGate = true;
-  this->ConnectedToOutput = o;
+  this->ConnectedToOutput = true;
+  this->OutputConnectedTo = o;
   this->pointingTo = o->GetPosition();
 }
 
@@ -89,15 +94,25 @@ void Point::Cycle() {
 Output::Output() {}
 void Output::Draw() {
   DrawCircleV(this->position, this->radius, this->color);
-  DrawText(this->label.c_str(), (this->position.x - 13), (this->position.y - 4), 10,
-           BLACK);
+  DrawText(this->label.c_str(), (this->position.x - 13), (this->position.y - 4),
+           10, BLACK);
 }
 
 void Output::ConnectToThis(Point *p) {
+  if (this->Input != nullptr) {
+    return;
+  }
+  this->Input = p;
   p->ConnectThis(this);
+  p->SetPointingTo(this->position);
 }
 
-void Output::Cycle() { this->CheckMouse(); }
+void Output::Cycle() {
+  this->CheckMouse();
+  if (this->Input != nullptr) {
+    this->Input->SetPointingTo(this->position);
+  }
+}
 
 void Output::CheckMouse() {
   Vector2 mp = GetMousePosition();
@@ -136,6 +151,8 @@ void Gate::Draw() {
   DrawRectangleV(this->position, this->size, BLACK);
   DrawText(this->lable.c_str(), this->position.x + (this->size.x / 2 - 8),
            this->position.y + (this->size.y / 2 - 4), 10, WHITE);
+  this->connDragging = false;
+  DrawLineV(this->ConnectionLoc, this->pointingTo, BLACK);
 }
 
 void Gate::ConnectToThis(Point *p) {

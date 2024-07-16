@@ -13,7 +13,7 @@ class State {
 
 public:
   State() {}
-  inline void AddOutput(Output *o) { this->Out = o; }
+  inline void SetOutput(Output *o) { this->Out = o; }
   inline void AddObject(Object *ob) { this->Objects.push_back(ob); }
 
   inline void AddGate(Gate *ob) {
@@ -44,9 +44,17 @@ public:
         this->DraggedConnection = gate;
       }
       if (gate->IsMouseOnThis() && !gate->IsConnDragging() &&
-          gate->HasEmptyConn() && this->DraggedConnection != nullptr) {
+          gate->HasEmptyConn() && this->DraggedConnection != nullptr &&
+          this->DraggedConnection != gate) {
         gate->ConnectToThis(this->DraggedConnection);
         std::cout << (this->DraggedConnection == nullptr) << std::endl;
+        this->DraggedConnection = nullptr;
+      }
+    }
+    if (this->Out != nullptr && this->DraggedConnection != nullptr) {
+      if (this->Out->IsMouseOnThis() && !this->Out->IsConnectedTo()) {
+        this->Out->ConnectToThis(this->DraggedConnection);
+        this->DraggedConnection->ConnectThis(this->Out);
         this->DraggedConnection = nullptr;
       }
     }
@@ -57,7 +65,7 @@ public:
   Point *DraggedConnection = nullptr;
   Output *Out = nullptr;
 
-  void Controls() {
+  inline void Controls() {
     switch (GetKeyPressed()) {
     case KEY_TWO:
       this->AddGate(new AndGate);

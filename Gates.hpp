@@ -16,6 +16,7 @@ public:
   virtual void Draw() = 0;
   virtual void Cycle() = 0;
   virtual void CheckMouse() = 0;
+  bool IsMouseOnThis();
 
   bool DragMove();
   void OffsetPosition(Vector2 offset);
@@ -30,7 +31,7 @@ protected:
   Vector2 ConnectionLoc;
   Vector2 pointingTo;
   Gate *GateConnectedTo = nullptr;
-  Output *OutputConnectTo = nullptr;
+  Output *OutputConnectedTo = nullptr;
 
   bool Value;
   bool ConnectedToGate = false;
@@ -48,7 +49,6 @@ public:
 
   virtual void Draw();
   virtual void CheckMouse();
-  bool IsMouseOnThis();
   bool IsConnDragging();
   void ConnectThis(Gate *);
   void ConnectThis(Output *);
@@ -71,6 +71,7 @@ public:
   virtual void Cycle();
   void ConnectToThis(Point *);
   Vector2 GetPosition() { return this->position; }
+  bool IsConnectedTo() { return (this->Input != nullptr); }
   void SetLabel() {
     if (this->value) {
       this->label = "True";
