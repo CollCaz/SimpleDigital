@@ -1,6 +1,5 @@
 #pragma once
 #include "Gates.hpp"
-#include <iostream>
 #include <raylib.h>
 #include <vector>
 
@@ -11,14 +10,22 @@ class State {
   // Gates
   std::vector<Gate *> Gates;
 
+  // Points
+  std::vector<Point *> Points;
+
 public:
   State() {}
   inline void SetOutput(Output *o) { this->Out = o; }
   inline void AddObject(Object *ob) { this->Objects.push_back(ob); }
 
   inline void AddGate(Gate *ob) {
-    AddObject(ob);
+    AddPoint(ob);
     this->Gates.push_back(ob);
+  }
+
+  inline void AddPoint(Point *p) {
+    AddObject(p);
+    this->Points.push_back(p);
   }
 
   inline void DrawAll() {
@@ -26,6 +33,12 @@ public:
       object->Draw();
     }
     this->Out->Draw();
+  }
+
+  inline void TestAll() {
+    if (this->Out->IsConnectedTo()) {
+      this->Out->Solve();
+    }
   }
 
   inline void CycleAll() {
@@ -38,17 +51,23 @@ public:
     this->Out->CheckMouse();
     this->Out->DragMove();
 
-    for (auto gate : this->Gates) {
-      gate->DragToConnect();
-      if (gate->IsConnDragging()) {
-        this->DraggedConnection = gate;
+    for (auto point : this->Points) {
+      point->DragToConnect();
+    }
+
+    for (auto point : this->Points) {
+      point->DragToConnect();
+      if (point->IsConnDragging()) {
+        this->DraggedConnection = point;
       }
-      if (gate->IsMouseOnThis() && !gate->IsConnDragging() &&
-          gate->HasEmptyConn() && this->DraggedConnection != nullptr &&
-          this->DraggedConnection != gate) {
-        gate->ConnectToThis(this->DraggedConnection);
-        std::cout << (this->DraggedConnection == nullptr) << std::endl;
-        this->DraggedConnection = nullptr;
+    }
+    for (auto gate : this->Gates) {
+      if (this->DraggedConnection != nullptr && gate->IsMouseOnThis()) {
+        if (!gate->IsConnDragging() && gate->IsMouseOnThis() &&
+            gate != this->DraggedConnection) {
+          gate->ConnectToThis(this->DraggedConnection);
+          this->DraggedConnection = nullptr;
+        }
       }
     }
     if (this->Out != nullptr && this->DraggedConnection != nullptr) {
@@ -67,8 +86,27 @@ public:
 
   inline void Controls() {
     switch (GetKeyPressed()) {
+    case KEY_ONE:
+      this->AddPoint(new Switch);
+      break;
     case KEY_TWO:
       this->AddGate(new AndGate);
+      break;
+    case KEY_THREE:
+      this->AddGate(new OrGate);
+      break;
+    case KEY_FOUR:
+      this->AddGate(new NandGate);
+      break;
+    case KEY_FIVE:
+      this->AddGate(new NorGate);
+      break;
+    case KEY_SIX:
+      this->AddGate(new XorGate);
+      break;
+    case KEY_SEVEN:
+      this->AddGate(new XnorGate);
+      break;
     }
   }
 };

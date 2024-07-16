@@ -8,13 +8,12 @@ int main() {
   AndGate *g = new AndGate;
   Output *o = new Output;
   o->OffsetPosition(Vector2{200, 200});
-  g->OffsetPosition(Vector2{100, 100});
-  CurrentState.AddGate(g);
   CurrentState.SetOutput(o);
   InitWindow(850, 450, "Hello World");
   while (!WindowShouldClose()) {
     CurrentState.CycleAll();
     CurrentState.Controls();
+    CurrentState.TestAll();
     BeginDrawing();
     CurrentState.DrawAll();
     ClearBackground(WHITE);
