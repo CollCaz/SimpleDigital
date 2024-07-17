@@ -18,7 +18,6 @@ public:
   virtual void Cycle() = 0;
   virtual void CheckMouse() = 0;
   bool IsMouseOnThis();
-  void Test() { std::cout << "Hello" << std::endl; }
 
   bool DragMove();
   void OffsetPosition(Vector2 offset);
@@ -92,6 +91,7 @@ public:
   Vector2 GetPosition() { return this->position; }
   bool IsConnectedTo() { return (this->Input != nullptr); }
   Point *GetInput() { return this->Input; }
+  void SetPosition(Vector2 v) { this->position = v; }
   void SetLabel() {
     if (this->value) {
       this->label = "True";

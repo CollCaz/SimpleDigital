@@ -99,15 +99,11 @@ void Switch::Draw() {
 }
 
 void Switch::SwitchValue() {
-  std::cout << this->Value << std::endl;
   this->Value = !this->Value;
   this->color = this->Value ? GREEN : RED;
 }
 
 void Switch::Cycle() {
-  // if (this->IsMouseOnThis()) {
-  //   std::cout << "AAAA" << std::endl;
-  // }
   if (this->IsMouseOnThis() && IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE)) {
     this->SwitchValue();
     if (this->ConnectedToGate) {

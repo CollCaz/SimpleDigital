@@ -14,7 +14,10 @@ class State {
   std::vector<Point *> Points;
 
 public:
-  State() {}
+  State() {
+    this->Out = new Output;
+    this->Out->SetPosition(this->InilitOutPos());
+  }
   inline void SetOutput(Output *o) { this->Out = o; }
   inline void AddObject(Object *ob) { this->Objects.push_back(ob); }
 
@@ -35,7 +38,7 @@ public:
     this->Out->Draw();
   }
 
-  inline void TestAll() {
+  inline void Solve() {
     if (this->Out->IsConnectedTo()) {
       this->Out->Solve();
     }
@@ -79,6 +82,21 @@ public:
     }
   }
 
+  inline Vector2 InilitOutPos() {
+    return Vector2{(float)GetScreenWidth() / 2 - 300, (float)GetScreenHeight() / 2};
+  }
+
+  inline void Reset() {
+    this->Objects.clear();
+    this->Gates.clear();
+    this->Points.clear();
+    this->DraggedConnection = nullptr;
+    this->MovingObject = false;
+    this->Out = nullptr;
+    this->Out = new Output;
+    this->Out->SetPosition(this->InilitOutPos());
+  }
+
   // If an object is currently being moved
   bool MovingObject;
   Point *DraggedConnection = nullptr;
@@ -86,6 +104,9 @@ public:
 
   inline void Controls() {
     switch (GetKeyPressed()) {
+    case KEY_DELETE:
+      this->Reset();
+      break;
     case KEY_ONE:
       this->AddPoint(new Switch);
       break;
